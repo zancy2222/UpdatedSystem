@@ -19,40 +19,7 @@ import AppointmentNature from "./AppointmentNature";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-// Sample data for demonstration - replace with your actual data
-const genderData = [
-  { name: 'Male', value: 45 },
-  { name: 'Female', value: 55 }
-];
-
-const ageData = [
-  { name: '18-25', value: 20 },
-  { name: '26-35', value: 35 },
-  { name: '36-45', value: 25 },
-  { name: '46-55', value: 15 },
-  { name: '56+', value: 5 }
-];
-
-const occupationData = [
-  { name: 'Student', value: 30 },
-  { name: 'Lawyer', value: 40 },
-  { name: 'Accountant', value: 15 },
-  { name: 'Engineer', value: 10 },
-  { name: 'Unemployed', value: 5 }
-];
-
-const civilStatusData = [
-  { name: 'Single', value: 40 },
-  { name: 'Married', value: 45 }
-];
-
-const consultationData = [
-  { name: 'Documentary Requirements', value: 35 },
-  { name: 'Court Cases', value: 25 },
-  { name: 'System Procedures', value: 20 }
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6F61', '#6B7280'];
 
 const SentimentBadge = ({ sentiment, score }) => {
   const getSentimentColor = () => {
@@ -110,6 +77,13 @@ export default function DashboardPage() {
     negative: 0,
     averageRating: 0,
   });
+  const [dashboardData, setDashboardData] = useState({
+    gender: [],
+    age: [],
+    occupation: [],
+    civil_status: [],
+    consultation_topics: [],
+  });
 
   // Authentication check
   useEffect(() => {
@@ -120,6 +94,7 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, navigate]);
 
+  // Fetch appointments
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
@@ -148,6 +123,25 @@ export default function DashboardPage() {
       }
     };
     fetchAppointments();
+  }, []);
+
+  // Fetch dashboard statistics
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const response = await fetch("/api/client-appointments/dashboard_stats/");
+        if (!response.ok) {
+          throw new Error("Failed to fetch dashboard stats");
+        }
+        const data = await response.json();
+        if (data.success) {
+          setDashboardData(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      }
+    };
+    fetchDashboardStats();
   }, []);
 
   const calculateFeedbackStats = (appointments) => {
@@ -202,15 +196,15 @@ export default function DashboardPage() {
                 </div>
                 <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-6 rounded-xl">
                   <h3 className="text-lg font-semibold mb-2">Active Clients</h3>
-                  <p className="text-3xl font-bold">156</p>
+                  <p className="text-3xl font-bold">{dashboardData.gender.reduce((sum, g) => sum + g.value, 0)}</p>
                 </div>
                 <div className="bg-gradient-to-r from-slate-600 to-slate-700 text-white p-6 rounded-xl">
                   <h3 className="text-lg font-semibold mb-2">Staff Members</h3>
-                  <p className="text-3xl font-bold">8</p>
+                  <p className="text-3xl font-bold">8</p> {/* Update with real data if available */}
                 </div>
               </div>
 
-              {/* New Graphs Section */}
+              {/* Graphs Section */}
               <div className="mt-8">
                 <h3 className="text-xl font-semibold mb-6 text-slate-800">Client Demographics</h3>
                 
@@ -222,7 +216,7 @@ export default function DashboardPage() {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={genderData}
+                            data={dashboardData.gender}
                             cx="50%"
                             cy="50%"
                             labelLine={false}
@@ -231,7 +225,7 @@ export default function DashboardPage() {
                             dataKey="value"
                             label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                           >
-                            {genderData.map((entry, index) => (
+                            {dashboardData.gender.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
@@ -247,7 +241,7 @@ export default function DashboardPage() {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
-                          data={ageData}
+                          data={dashboardData.age}
                           margin={{
                             top: 5,
                             right: 30,
@@ -274,7 +268,7 @@ export default function DashboardPage() {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={occupationData}
+                            data={dashboardData.occupation}
                             cx="50%"
                             cy="50%"
                             labelLine={false}
@@ -283,7 +277,7 @@ export default function DashboardPage() {
                             dataKey="value"
                             label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                           >
-                            {occupationData.map((entry, index) => (
+                            {dashboardData.occupation.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
@@ -301,7 +295,7 @@ export default function DashboardPage() {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={civilStatusData}
+                            data={dashboardData.civil_status}
                             cx="50%"
                             cy="50%"
                             labelLine={false}
@@ -310,7 +304,7 @@ export default function DashboardPage() {
                             dataKey="value"
                             label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                           >
-                            {civilStatusData.map((entry, index) => (
+                            {dashboardData.civil_status.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
@@ -326,7 +320,7 @@ export default function DashboardPage() {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
-                          data={consultationData}
+                          data={dashboardData.consultation_topics}
                           margin={{
                             top: 5,
                             right: 30,
@@ -481,7 +475,7 @@ export default function DashboardPage() {
                   className="w-5 h-5 text-slate-600"
                   fill="none"
                   stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  viewBox="0 24 24"
                 >
                   <path
                     strokeLinecap="round"

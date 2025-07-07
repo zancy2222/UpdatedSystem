@@ -13,8 +13,6 @@ import ScheduleAdd from "../components/ScheduleAdd";
 import ScheduleEdit from "../components/ScheduleEdit";
 
 export default function Appointment({
-  appointments,
-  setAppointments,
   isModalOpen,
   setIsModalOpen,
   isEditModalOpen,
@@ -22,8 +20,9 @@ export default function Appointment({
   selectedFilterDate,
   setSelectedFilterDate,
 }) {
+  const [appointments, setAppointments] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedEditDate, setSelectedEditDate] = useState(""); // Add separate state for edit date
+  const [selectedEditDate, setSelectedEditDate] = useState("");
   const [appointmentToEdit, setAppointmentToEdit] = useState(null);
   const [personnelOptions, setPersonnelOptions] = useState({
     head_of_office: [],
@@ -68,7 +67,6 @@ export default function Appointment({
 
       if (data.success) {
         setPersonnelOptions(data.data);
-        // Set default head of office if available
         if (data.data.head_of_office?.length > 0) {
           setFormData((prev) => ({
             ...prev,
@@ -80,33 +78,41 @@ export default function Appointment({
       console.error("Error fetching personnel options:", error);
     }
   };
-useEffect(() => {
-  fetchAppointments();
-}, []);
 
-const fetchAppointments = async () => {
-  try {
-    const response = await fetch("/api/appointment-schedules/");
-    const data = await response.json();
+  // Fetch appointments on component mount
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
 
-    if (data.success) {
-      const formatted = data.data.map((app) => ({
-        id: app.id,
-        date: new Date(app.date).toLocaleDateString("en-GB"),
-        timeSlot: app.time_slot,
-        headOfOffice: getPersonnelName(app.head_of_office_detail),
-        deputy: getPersonnelName(app.deputy_detail),
-        adminOfficer: getPersonnelName(app.admin_officer_detail),
-        examiner: getPersonnelName(app.examiner_detail),
-      }));
-      setAppointments(formatted);
-    } else {
-      console.error("Failed to fetch appointments:", data.message);
+  const fetchAppointments = async () => {
+    try {
+      const response = await fetch("/api/appointment-schedules/");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      if (data.success) {
+        const formatted = data.data.map((app) => ({
+          id: app.id,
+          date: new Date(app.date).toLocaleDateString("en-GB"),
+          timeSlot: app.time_slot,
+          headOfOffice: getPersonnelName(app.head_of_office_detail),
+          deputy: getPersonnelName(app.deputy_detail),
+          adminOfficer: getPersonnelName(app.admin_officer_detail),
+          examiner: getPersonnelName(app.examiner_detail),
+        }));
+        setAppointments(formatted);
+      } else {
+        console.error("Failed to fetch appointments:", data.message);
+        setAppointments([]);
+      }
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      setAppointments([]);
     }
-  } catch (error) {
-    console.error("Error fetching appointments:", error);
-  }
-};
+  };
+
   const handleFormSubmit = async () => {
     if (!selectedDate) {
       alert("Please select a date");
@@ -114,7 +120,7 @@ const fetchAppointments = async () => {
     }
     try {
       const appointmentData = {
-        date: selectedDate, // selectedDate is already in YYYY-MM-DD format from date input
+        date: selectedDate,
         time_slot: formData.timeSlot,
         head_of_office: formData.headOfOffice,
         deputy: formData.deputy || null,
@@ -122,7 +128,7 @@ const fetchAppointments = async () => {
         examiner: formData.examiner || null,
       };
 
-     const response = await fetch("/api/appointment-schedules/", {
+      const response = await fetch("/api/appointment-schedules/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -132,7 +138,6 @@ const fetchAppointments = async () => {
       const data = await response.json();
 
       if (data.success) {
-        // Add the new appointment to the list
         setAppointments((prev) => [
           ...prev,
           {
@@ -161,7 +166,7 @@ const fetchAppointments = async () => {
 
     try {
       const appointmentData = {
-        date: selectedEditDate, // Use selectedEditDate which is in YYYY-MM-DD format
+        date: selectedEditDate,
         time_slot: formData.timeSlot,
         head_of_office: formData.headOfOffice,
         deputy: formData.deputy || null,
@@ -170,7 +175,7 @@ const fetchAppointments = async () => {
       };
 
       const response = await fetch(
-       `/api/appointment-schedules/${appointmentToEdit.id}/`,
+        `/api/appointment-schedules/${appointmentToEdit.id}/`,
         {
           method: "PUT",
           headers: {
@@ -182,7 +187,6 @@ const fetchAppointments = async () => {
       const data = await response.json();
 
       if (data.success) {
-        // Update the appointment in the list
         const updatedAppointments = appointments.map((app) =>
           app.id === appointmentToEdit.id
             ? {
@@ -214,24 +218,18 @@ const fetchAppointments = async () => {
 
   const handleEditClick = (appointment) => {
     setAppointmentToEdit(appointment);
-
-    // Convert display date to date input format
     setSelectedEditDate(convertToDateInputFormat(appointment.date));
 
-    // Helper function to find personnel ID by name with better error handling
     const findPersonnelId = (personnelArray, name) => {
       if (!name || !personnelArray || personnelArray.length === 0) return "";
-
       const person = personnelArray.find((p) => {
         const fullName =
           p.full_name || `${p.firstname || ""} ${p.lastname || ""}`.trim();
         return fullName === name;
       });
-
       return person ? person.id : "";
     };
 
-    // Find the personnel IDs based on names with improved error handling
     const headOfOfficeId = findPersonnelId(
       personnelOptions.head_of_office,
       appointment.headOfOffice
@@ -249,7 +247,6 @@ const fetchAppointments = async () => {
       appointment.examiner
     );
 
-    // Debug logging to ensure values are found correctly
     console.log("Edit appointment values:", {
       headOfOfficeId,
       deputyId,
@@ -298,7 +295,6 @@ const fetchAppointments = async () => {
 
   return (
     <div className="space-y-6">
-      {/* Header with Add Button */}
       <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-slate-800">
@@ -313,7 +309,6 @@ const fetchAppointments = async () => {
           </button>
         </div>
 
-        {/* Date Filter Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto">
           {Array.from(new Set(appointments.map((app) => app.date))).map(
             (date) => (
@@ -342,7 +337,6 @@ const fetchAppointments = async () => {
           </button>
         </div>
 
-        {/* Appointments List */}
         <div className="space-y-4">
           {filteredAppointments.map((appointment) => (
             <div
@@ -429,7 +423,6 @@ const fetchAppointments = async () => {
         personnelOptions={personnelOptions}
       />
 
-      {/* Edit Schedule Modal */}
       <ScheduleEdit
         isEditModalOpen={isEditModalOpen}
         setIsEditModalOpen={setIsEditModalOpen}

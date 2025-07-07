@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'appointment_system.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME', 'appt_registry2'),
+        'NAME': os.getenv('DB_NAME', 'appointment_db'),
         'USER': os.getenv('DB_USER', 'root'),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', 'localhost'),

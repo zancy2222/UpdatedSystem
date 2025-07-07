@@ -6,6 +6,9 @@ from rest_framework.permissions import AllowAny
 from django.shortcuts import get_object_or_404
 from django.core.files.storage import default_storage
 import os
+from django.db.models import Count, Q
+from datetime import date
+from django.utils import timezone
 from .models import ClientAppointment, AppointmentAttachment
 from .serializers import (
     ClientAppointmentSerializer, 
@@ -401,3 +404,62 @@ class ClientAppointmentViewSet(viewsets.ModelViewSet):
             label = 'Neutral'
         
         return score, label
+    
+    @action(detail=False, methods=['get'])
+    def dashboard_stats(self, request):
+        """Get dashboard statistics for gender, age, occupation, civil status, and consultation topics"""
+        
+        # Number of males and females
+        gender_stats = Client.objects.values('sex').annotate(count=Count('id')).order_by()
+        
+        # Age distribution
+        today = date.today()
+        age_groups = [
+            {'name': '18-25', 'min_age': 18, 'max_age': 25},
+            {'name': '26-35', 'min_age': 26, 'max_age': 35},
+            {'name': '36-45', 'min_age': 36, 'max_age': 45},
+            {'name': '46-55', 'min_age': 46, 'max_age': 55},
+            {'name': '56+', 'min_age': 56, 'max_age': 150},
+        ]
+        age_stats = []
+        for group in age_groups:
+            min_birth_year = today.year - group['max_age']
+            max_birth_year = today.year - group['min_age']
+            count = Client.objects.filter(
+                birthday__year__gte=min_birth_year,
+                birthday__year__lte=max_birth_year
+            ).count()
+            age_stats.append({'name': group['name'], 'value': count})
+
+        # Occupation distribution
+        occupation_stats = Client.objects.values('occupation').annotate(count=Count('id')).exclude(occupation__isnull=True).order_by('-count')
+
+        # Civil status distribution
+        civil_status_stats = Client.objects.values('civil_status').annotate(count=Count('id')).order_by()
+
+        # Most common consultation topics
+        consultation_stats = ClientAppointment.objects.values('inquiry_type__nature').annotate(count=Count('id')).order_by('-count')[:5]
+
+        return Response({
+            'success': True,
+            'data': {
+                'gender': [
+                    {'name': g['sex'], 'value': g['count']}
+                    for g in gender_stats
+                ],
+                'age': age_stats,
+                'occupation': [
+                    {'name': o['occupation'], 'value': o['count']}
+                    for o in occupation_stats
+                ],
+                'civil_status': [
+                    {'name': c['civil_status'], 'value': c['count']}
+                    for c in civil_status_stats
+                ],
+                'consultation_topics': [
+                    {'name': c['inquiry_type__nature'], 'value': c['count']}
+                    for c in consultation_stats
+                ]
+            },
+            'message': 'Dashboard statistics retrieved successfully'
+        })    
