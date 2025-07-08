@@ -35,6 +35,7 @@ export default function ClientAppointmentSystem() {
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarView, setCalendarView] = useState(new Date());
+  const [fullyBookedDates, setFullyBookedDates] = useState([]);
 
   // UPDATED: Store detailed officer schedules with IDs
   const [officerSchedules, setOfficerSchedules] = useState({
@@ -191,6 +192,21 @@ export default function ClientAppointmentSystem() {
     fetchSchedules();
   }, []);
 
+useEffect(() => {
+  const fetchFullDates = async () => {
+    try {
+      const res = await fetch("/api/client-appointments/full_dates/");
+      const result = await res.json();
+      if (result.success) {
+        setFullyBookedDates(result.data); // Dates in 'YYYY-MM-DD' format
+      }
+    } catch (err) {
+      console.error("Failed to fetch fully booked dates:", err);
+    }
+  };
+
+  fetchFullDates();
+}, []);
   // Sample appointments data
   const [appointments, setAppointments] = useState([
     {
@@ -289,109 +305,107 @@ export default function ClientAppointmentSystem() {
 
   // 6. Updated handleDone function
   const handleDone = async () => {
-    if (selectedDate && selectedInquiry && selectedOfficerId) {
-      try {
-        const inquiry = appointmentNatures.find(
-          (type) => type.value === selectedInquiry
-        );
-
-        if (!inquiry) {
-          alert("Selected inquiry type not found. Please try again.");
-          return;
-        }
-
-        const clientId = getClientId();
-        if (!clientId) {
-          alert("Client ID is missing. Please try logging in again.");
-          return;
-        }
-
-        // Debugging logs
-        console.log("Creating appointment with:", {
-          date: selectedDate,
-          inquiry: selectedInquiry,
-          officerType: inquiry.officer,
-          officerId: selectedOfficerId,
-          attachments: attachments.length,
-        });
-
-        // Create FormData for file upload
-        const formData = new FormData();
-        formData.append("client", clientId);
-        formData.append("inquiry_type", selectedInquiry); // This now sends the appointment nature ID
-        formData.append("appointment_date", selectedDate);
-        formData.append("officer_type", inquiry.officer);
-        formData.append("officer_id", selectedOfficerId);
-
-        // Add attachments
-        attachments.forEach((file) => {
-          formData.append("attachments", file);
-        });
-
-        // Log FormData contents
-        for (let [key, value] of formData.entries()) {
-          console.log(key, value);
-        }
-
-        const response = await fetch("/api/client-appointments/", {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await response.json();
-        console.log("API Response:", data);
-
-        if (data.success) {
-          // Get the specific officer's name
-          const selectedOfficerData = officerSchedules[
-            inquiry.officer
-          ].officers.find(
-            (officer) => officer.id.toString() === selectedOfficerId.toString()
-          );
-          const officerName = selectedOfficerData?.name || inquiry.label;
-
-          // Create new appointment with all details
-          const newAppointment = {
-            id: data.data.id,
-            nameOfInquiry: inquiry.label,
-            apptDate: selectedDate,
-            status: "Pending",
-            feedback: "",
-            assignedOfficer: officerName,
-            attachments: data.data.attachments || [],
-          };
-
-          setAppointments((prev) => [...prev, newAppointment]);
-
-          // Reset form
-          setSelectedInquiry("");
-          setAttachments([]);
-          setSelectedOfficer("");
-          setSelectedDate("");
-          setSelectedOfficerId("");
-          setShowSchedule(false);
-          setIsModalOpen(false);
-          setShowConfirmation(false);
-
-          alert(
-            `Appointment created successfully with ${officerName}! ${
-              attachments.length > 0
-                ? `${attachments.length} file(s) uploaded.`
-                : ""
-            }`
-          );
-        } else {
-          alert(data.message || "Failed to create appointment");
-          if (data.errors) {
-            console.error("Validation errors:", data.errors);
-          }
-        }
-      } catch (error) {
-        console.error("Error creating appointment:", error);
-        alert("Error creating appointment. Please try again.");
-      }
+  if (selectedDate && selectedInquiry && selectedOfficerId) {
+    if (fullyBookedDates.includes(selectedDate)) {
+      alert("Sorry, this date is already fully booked. Please choose another one.");
+      return;
     }
-  };
+
+    try {
+      const inquiry = appointmentNatures.find(
+        (type) => type.value === selectedInquiry
+      );
+
+      if (!inquiry) {
+        alert("Selected inquiry type not found. Please try again.");
+        return;
+      }
+
+      const clientId = getClientId();
+      if (!clientId) {
+        alert("Client ID is missing. Please try logging in again.");
+        return;
+      }
+
+      console.log("Creating appointment with:", {
+        date: selectedDate,
+        inquiry: selectedInquiry,
+        officerType: inquiry.officer,
+        officerId: selectedOfficerId,
+        attachments: attachments.length,
+      });
+
+      const formData = new FormData();
+      formData.append("client", clientId);
+      formData.append("inquiry_type", selectedInquiry);
+      formData.append("appointment_date", selectedDate);
+      formData.append("officer_type", inquiry.officer);
+      formData.append("officer_id", selectedOfficerId);
+      attachments.forEach((file) => {
+        formData.append("attachments", file);
+      });
+
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+
+      const response = await fetch("/api/client-appointments/", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      console.log("API Response:", data);
+
+      if (data.success) {
+        const selectedOfficerData = officerSchedules[inquiry.officer].officers.find(
+          (officer) => officer.id.toString() === selectedOfficerId.toString()
+        );
+        const officerName = selectedOfficerData?.name || inquiry.label;
+
+        const newAppointment = {
+          id: data.data.id,
+          nameOfInquiry: inquiry.label,
+          apptDate: selectedDate,
+          status: "Pending",
+          feedback: "",
+          assignedOfficer: officerName,
+          attachments: data.data.attachments || [],
+        };
+
+        setAppointments((prev) => [...prev, newAppointment]);
+
+        // Reset form state
+        setSelectedInquiry("");
+        setAttachments([]);
+        setSelectedOfficer("");
+        setSelectedDate("");
+        setSelectedOfficerId("");
+        setShowSchedule(false);
+        setIsModalOpen(false);
+        setShowConfirmation(false);
+
+        alert(
+          `Appointment created successfully with ${officerName}! ${
+            attachments.length > 0
+              ? `${attachments.length} file(s) uploaded.`
+              : ""
+          }`
+        );
+        window.location.reload();
+      } else {
+        alert(data.message || "Failed to create appointment");
+        if (data.errors) {
+          console.error("Validation errors:", data.errors);
+        }
+      }
+    } catch (error) {
+      console.error("Error creating appointment:", error);
+      alert("Error creating appointment. Please try again.");
+    }
+  }
+};
+
   const giveFeedback = (id, feedback) => {
     setAppointments((prev) =>
       prev.map((apt) => (apt.id === id ? { ...apt, feedback } : apt))
@@ -540,38 +554,42 @@ export default function ClientAppointmentSystem() {
       const isSelected = selectedDate === dateString;
       const isPast = date < today;
       const isWeekdayDate = isWeekday(date);
+      const isFullyBooked = fullyBookedDates.includes(dateString)
 
       days.push(
-        <button
-          key={day}
-          onClick={() => {
-            if (isAvailable && !isPast && isWeekdayDate) {
-              handleDateSelection(dateString); // UPDATED: Use new handler
-            }
-          }}
-          disabled={!isAvailable || isPast || !isWeekdayDate}
-          className={`
-            h-12 w-full flex items-center justify-center text-sm font-medium rounded-lg transition-all duration-200
-            ${
-              isSelected
-                ? "bg-blue-600 text-white shadow-lg transform scale-105"
-                : isAvailable && !isPast && isWeekdayDate
-                ? "bg-green-100 text-green-800 hover:bg-green-200 border-2 border-green-300"
-                : isPast || !isWeekdayDate
-                ? "text-gray-300 cursor-not-allowed"
-                : "text-gray-400 cursor-not-allowed"
-            }
-            ${isToday && !isSelected ? "ring-2 ring-blue-400" : ""}
-          `}
-        >
-          <span className="relative">
-            {day}
-            {isAvailable && !isPast && isWeekdayDate && (
-              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-green-500 rounded-full"></div>
-            )}
-          </span>
-        </button>
-      );
+  <button
+    key={day}
+    onClick={() => {
+      if (isAvailable && !isPast && isWeekdayDate && !isFullyBooked) {
+        handleDateSelection(dateString);
+      }
+    }}
+    disabled={!isAvailable || isPast || !isWeekdayDate || isFullyBooked}
+    className={`
+      h-12 w-full flex items-center justify-center text-sm font-medium rounded-lg transition-all duration-200
+      ${
+        isSelected
+          ? "bg-blue-600 text-white shadow-lg transform scale-105"
+          : isFullyBooked
+          ? "bg-red-200 text-red-700 cursor-not-allowed"
+          : isAvailable && !isPast && isWeekdayDate
+          ? "bg-green-100 text-green-800 hover:bg-green-200 border-2 border-green-300"
+          : isPast || !isWeekdayDate
+          ? "text-gray-300 cursor-not-allowed"
+          : "text-gray-400 cursor-not-allowed"
+      }
+      ${isToday && !isSelected && !isFullyBooked ? "ring-2 ring-blue-400" : ""}
+    `}
+  >
+    <span className="relative">
+      {day}
+      {isAvailable && !isPast && isWeekdayDate && !isFullyBooked && (
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-green-500 rounded-full"></div>
+      )}
+    </span>
+  </button>
+);
+
     }
 
     // Get the selected officer's name for display

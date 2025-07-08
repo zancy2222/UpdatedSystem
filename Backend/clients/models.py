@@ -22,7 +22,7 @@ class Client(AbstractUser):
     SEX_CHOICES = [
         ('Male', 'male'),
         ('Female', 'female'),
-        ('Other', 'other'),
+
     ]
     
     # GROUP PERMISSIONS

@@ -76,7 +76,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'appointment_system.wsgi.application'
 
-# CHANGED DEFAULT DBSQLITE 3 TO SQL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -87,7 +86,6 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', '3306'),
     }
 }
-
 
 # PASSWORD VALIDATION
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

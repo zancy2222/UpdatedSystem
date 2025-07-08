@@ -4,11 +4,11 @@ from clients.models import Client
 from personnel.models import Personnel
 from appointment_nature.models import AppointmentNature
 
-
 class ClientAppointment(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Confirmed', 'Confirmed'),
+        ('Rescheduled', 'Rescheduled'),  # Add Rescheduled
         ('Cancelled', 'Cancelled'),
         ('Completed', 'Completed'),
     ]
@@ -26,10 +26,10 @@ class ClientAppointment(models.Model):
     assigned_officer = models.ForeignKey(Personnel, on_delete=models.CASCADE, related_name='appointments')
     notes = models.TextField(blank=True, null=True)
     feedback = models.TextField(blank=True, null=True)
-    translated_feedback = models.TextField(blank=True, null=True)  # Stores English translation
-    feedback_language = models.CharField(max_length=10, blank=True, null=True)  # Original language code
+    translated_feedback = models.TextField(blank=True, null=True)
+    feedback_language = models.CharField(max_length=10, blank=True, null=True)
     rating = models.PositiveSmallIntegerField(blank=True, null=True)
-    sentiment_score = models.FloatField(blank=True, null=True)  # Sentiment score (-1 to 1)
+    sentiment_score = models.FloatField(blank=True, null=True)
     sentiment_label = models.CharField(
         max_length=10, 
         choices=SENTIMENT_LABEL_CHOICES, 

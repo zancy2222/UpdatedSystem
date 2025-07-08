@@ -75,6 +75,22 @@ class ClientAppointmentViewSet(viewsets.ModelViewSet):
             'errors': serializer.errors,
             'message': 'Failed to create appointment'
         }, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=False, methods=['get'])
+    def full_dates(self, request):
+        """Return appointment dates that are already full (10 or more)"""
+        full_dates = (
+            ClientAppointment.objects
+            .values('appointment_date')
+            .annotate(total=Count('id'))
+            .filter(total__gte=10)
+            .values_list('appointment_date', flat=True)
+        )
+
+        return Response({
+            'success': True,
+            'data': list(full_dates)
+        })
     
     @action(detail=True, methods=['post'])
     def upload_attachment(self, request, pk=None):
@@ -327,7 +343,7 @@ class ClientAppointmentViewSet(viewsets.ModelViewSet):
         # Validate required fields
         feedback_text = request.data.get('feedback')
         rating = request.data.get('rating')
-        original_language = request.data.get('language', 'en')  # Default to English
+        
         
         if not feedback_text or not rating:
             return Response({
@@ -345,14 +361,12 @@ class ClientAppointmentViewSet(viewsets.ModelViewSet):
                 'message': 'Rating must be an integer between 1 and 5'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Translate if not English
-        translated_feedback = feedback_text
-        if original_language != 'en':
-            try:
-                translated_feedback = self.translate_text(feedback_text, original_language)
-            except Exception as e:
-                print(f"Translation failed: {str(e)}")
-                # Continue with original text if translation fails
+        try:
+            translated_feedback, detected_language = self.translate_text(feedback_text)
+        except Exception as e:
+            print(f"Translation failed: {str(e)}")
+            translated_feedback = feedback_text
+            detected_language = 'unknown'
         
         # Perform sentiment analysis on translated text
         sentiment_score, sentiment_label = self.analyze_sentiment(translated_feedback)
@@ -363,7 +377,8 @@ class ClientAppointmentViewSet(viewsets.ModelViewSet):
         appointment.rating = rating
         appointment.sentiment_score = sentiment_score
         appointment.sentiment_label = sentiment_label
-        appointment.feedback_language = original_language
+        appointment.feedback_language = detected_language
+
         appointment.save()
         
         serializer = ClientAppointmentSerializer(appointment)
@@ -375,19 +390,27 @@ class ClientAppointmentViewSet(viewsets.ModelViewSet):
                 'score': sentiment_score,
                 'label': sentiment_label
             },
-            'translated_feedback': translated_feedback if original_language != 'en' else None,
+            'translated_feedback': translated_feedback if detected_language != 'en' else None,
             'message': 'Feedback submitted successfully'
         })
 
-    def translate_text(self, text, source_lang):
-        """Translate text to English using Google Translate"""
+    def translate_text(self, text):
+        """Automatically detect the language and translate to English using Google Translate"""
         translator = Translator()
         try:
-            translation = translator.translate(text, src=source_lang, dest='en')
-            return translation.text
+            detected = translator.detect(text)
+            detected_lang = detected.lang
+
+            if detected_lang == 'en':
+                return text, detected_lang  # No need to translate
+
+            translation = translator.translate(text, src=detected_lang, dest='en')
+            return translation.text, detected_lang
+
         except Exception as e:
             print(f"Translation error: {str(e)}")
-            return text   
+            return text, 'unknown'
+
 
     def analyze_sentiment(self, text):
         """Analyze sentiment of English text"""
