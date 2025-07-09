@@ -16,8 +16,9 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PersonnelProfile from "../components/PersonnelProfile";
-
-function AppointmentList() {
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+export function AppointmentList() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -46,7 +47,17 @@ function AppointmentList() {
     return JSON.parse(localStorage.getItem("personnelData") || {});
   };
 
-  const selectedOfficer = getPersonnelData()?.position?.toLowerCase() || "";
+const positionKeyMap = {
+  "head of office": "head",
+  "deputy": "deputy",
+  "administrative officer": "admin",
+  "examiner": "examiner",
+};
+const position = getPersonnelData()?.position?.toLowerCase() || "";
+
+
+  const selectedOfficer = positionKeyMap[position] || "";
+
 
   // Fetch available schedules
   useEffect(() => {
@@ -265,6 +276,8 @@ function AppointmentList() {
 
   const confirmStatusChange = async () => {
     try {
+      const capitalizedStatus =
+      selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1);
       setIsLoading(true);
       const response = await fetch(
         `http://localhost:8000/api/client-appointments/${selectedId}/`,
@@ -285,6 +298,7 @@ function AppointmentList() {
 
       if (data.success) {
         await fetchAppointments();
+        toast.success(`Status set to ${capitalizedStatus}`);
       } else {
         throw new Error(data.message || "Failed to update status");
       }
@@ -324,7 +338,9 @@ function AppointmentList() {
       const data = await response.json();
 
       if (data.success) {
+        toast.success(`Status set to Rescheduled`);
         await fetchAppointments();
+        
       } else {
         throw new Error(data.message || "Failed to reschedule appointment");
       }

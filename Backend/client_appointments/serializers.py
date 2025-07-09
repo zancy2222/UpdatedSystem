@@ -5,6 +5,7 @@ from clients.models import Client
 from personnel.models import Personnel
 from appointment_nature.models import AppointmentNature
 from datetime import date
+from utils.sms import send_sms 
 
 class AppointmentAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -68,17 +69,36 @@ class ClientAppointmentCreateSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
+        print("[DEBUG] Starting appointment creation...")
+
         officer_id = validated_data.pop('officer_id')
-        officer = Personnel.objects.get(id=officer_id)
+        try:
+            officer = Personnel.objects.get(id=officer_id)
+        except Personnel.DoesNotExist:
+            print("[ERROR] Officer not found.")
+            raise serializers.ValidationError({"officer_id": "Officer not found"})
+
         client = validated_data.get('client')
+
         status = 'Confirmed' if client.is_pwd or client.is_pregnant or client.age >= 60 else 'Pending'
+        print(f"[DEBUG] Appointment status: {status}")
+
         appointment = ClientAppointment.objects.create(
             **validated_data,
             assigned_officer=officer,
             status=status
         )
-        return appointment
+        print(f"[DEBUG] Appointment created: {appointment}")
 
+        if status == 'Confirmed' and client.contact_number:
+            message = f"Hi {client.full_name}, your appointment on {appointment.appointment_date} has been CONFIRMED."
+            print(f"[DEBUG] Sending SMS to {client.contact_number}: {message}")
+            response = send_sms(client.contact_number, message)
+            print(f"[DEBUG] Semaphore response: {response.status_code} {response.text}")
+        else:
+            print("[DEBUG] No SMS sent (status not confirmed or no contact number).")
+
+        return appointment
 class ClientAppointmentUpdateSerializer(serializers.ModelSerializer):
     officer_id = serializers.IntegerField(write_only=True, required=False)
     
@@ -119,7 +139,46 @@ class ClientAppointmentUpdateSerializer(serializers.ModelSerializer):
         return value
     
     def update(self, instance, validated_data):
+        print("[DEBUG] Starting update for ClientAppointment ID:", instance.id)
+
+        previous_status = instance.status
+        print(f"[DEBUG] Previous status: {previous_status}")
+
         officer_id = validated_data.pop('officer_id', None)
         if officer_id:
-            instance.assigned_officer = Personnel.objects.get(id=officer_id)
-        return super().update(instance, validated_data)
+            print(f"[DEBUG] Updating assigned officer to ID: {officer_id}")
+            try:
+                officer = Personnel.objects.get(id=officer_id)
+                instance.assigned_officer = officer
+                print(f"[DEBUG] Officer set to: {officer.firstname} {officer.lastname}")
+            except Personnel.DoesNotExist:
+                print("[ERROR] Officer not found with ID:", officer_id)
+                raise serializers.ValidationError({"officer_id": "Officer not found"})
+
+        # Perform the actual update
+        instance = super().update(instance, validated_data)
+        new_status = instance.status
+        print(f"[DEBUG] New status: {new_status}")
+
+        # Check and send SMS if status changed to Confirmed or Cancelled
+        if previous_status != new_status and new_status in ['Confirmed', 'Cancelled']:
+            client = instance.client
+            phone = client.contact_number
+            print(f"[DEBUG] Status changed — preparing to send SMS to: {phone}")
+
+            if phone:
+                if new_status == 'Confirmed':
+                    message = f"Hi {client.full_name}, your appointment on {instance.appointment_date} has been CONFIRMED."
+                elif new_status == 'Cancelled':
+                    message = f"Hi {client.full_name}, your appointment on {instance.appointment_date} has been CANCELLED."
+
+                print(f"[DEBUG] Sending SMS to {phone}: {message}")
+                response = send_sms(phone, message)
+                print(f"[DEBUG] Semaphore response: {response.status_code} - {response.text}")
+            else:
+                print("[DEBUG] No phone number provided — skipping SMS.")
+        else:
+            print("[DEBUG] No status change requiring SMS.")
+
+        print("[DEBUG] Update complete for ClientAppointment ID:", instance.id)
+        return instance

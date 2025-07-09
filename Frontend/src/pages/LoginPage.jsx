@@ -208,6 +208,9 @@ export default function LoginPage() {
                         alt="Bagong Pilipinas Logo"
                         className="absolute right-[-80px] top-1/2 transform -translate-y-1/2 w-24 h-24 object-contain"
                     />
+                     <h1 className="text-3xl font-bold text-white mb-2 leading-tight">
+                       Registry of Deeds
+                    </h1>
 
                     <h1 className="text-3xl font-bold text-white mb-2 leading-tight">
                         Appointment & Analytics

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, X } from "lucide-react";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function AppointmentNature() {
   const routingOptions = [
@@ -76,6 +78,7 @@ export default function AppointmentNature() {
         throw new Error('Failed to add appointment nature');
       }
 
+      toast.success(`Succesfully Updated Appointment Nature`);
       await fetchAppointmentNatures();
       setFormData({ nature: "", routing_option: "", description: "" });
       setIsAddModalOpen(false);
@@ -105,7 +108,7 @@ export default function AppointmentNature() {
       if (!response.ok) {
         throw new Error('Failed to update appointment nature');
       }
-
+      toast.success(`Succesfully Updated Appointment Nature`);
       await fetchAppointmentNatures();
       setFormData({ nature: "", routing_option: "", description: "" });
       setSelectedNature(null);

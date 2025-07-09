@@ -10,6 +10,9 @@ import {
 } from "lucide-react";
 import StaffList from "../components/StaffList";
 import AddStaff from "../components/AddStaff";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 export default function Staff() {
   const [staff, setStaff] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -133,7 +136,9 @@ export default function Staff() {
           }
         });
       }
-
+    toast.success(
+      isEditMode ? "Successfully updated staff" : "Successfully added staff"
+    );
       const response = await fetch(url, {
         method,
         headers: {

@@ -12,6 +12,9 @@ import {
   MessageSquare,
   Star,
 } from "lucide-react";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const ClientAppointment = ({ setIsModalOpen }) => {
   const [appointments, setAppointments] = useState([]);
@@ -99,6 +102,7 @@ const ClientAppointment = ({ setIsModalOpen }) => {
 
       const data = await response.json();
       if (data.success) {
+        toast.success(`Succesfully Cancelled Appointment`);
         await fetchAppointments();
         setShowConfirmModal(false);
         setSelectedAppointmentId(null);
@@ -241,16 +245,57 @@ const submitFeedback = async () => {
           </div>
         )}
 
-        {appointments.length === 0 && !error ? (
+{appointments.length === 0 && !error ? (
           <div className="text-center py-12">
-            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-600 mb-2">
-              No appointments yet
-            </h3>
-            <p className="text-gray-500 mb-6">
-              Set your first appointment to get started
-            </p>
-           
+            <div className="mb-8">
+              <Calendar className="w-20 h-20 text-blue-400 mx-auto mb-6" />
+              <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                No appointments yet
+              </h3>
+              <p className="text-gray-600 text-lg mb-8">
+                Set your first appointment to get started
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8 max-w-2xl mx-auto shadow-sm">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-blue-100 rounded-full p-3">
+                  <Calendar className="w-8 h-8 text-blue-600" />
+                </div>
+                <h4 className="text-xl font-semibold text-blue-800 ml-3">
+                  How to Schedule Your Appointment
+                </h4>
+              </div>
+              
+              <div className="space-y-4">
+                {[
+                  { step: 1, icon: Plus, text: "Click the Set Appointment Button", color: "bg-blue-500" },
+                  { step: 2, icon: FileText, text: "Select the Inquiry Type", color: "bg-green-500" },
+                  { step: 3, icon: Clock, text: "Pick your Schedule", color: "bg-purple-500" },
+                  { step: 4, icon: MessageSquare, text: "Wait for confirmation", color: "bg-yellow-500" },
+                  { step: 5, icon: User, text: "Go to the office at the confirmed date", color: "bg-red-500" }
+                ].map(({ step, icon: Icon, text, color }) => (
+                  <div key={step} className="flex items-center group hover:bg-white/60 rounded-lg p-3 transition-all duration-200">
+                    <div className={`${color} text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-4 shadow-md group-hover:scale-110 transition-transform`}>
+                      {step}
+                    </div>
+                    <Icon className="w-5 h-5 text-gray-600 mr-3" />
+                    <span className="text-gray-700 font-medium">{text}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-6 p-4 bg-blue-100 rounded-xl border border-blue-200">
+                <div className="flex items-center">
+                  <div className="bg-blue-500 rounded-full p-2 mr-3">
+                    <MessageSquare className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-blue-800 font-medium text-sm">
+                    💡 Tip: You'll receive a confirmation message once your appointment is approved!
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -264,9 +309,9 @@ const submitFeedback = async () => {
                     Appointment Date
                   </th>
                   <th className="px-6 py-4 text-left font-semibold">Status</th>
-                  <th className="px-6 py-4 text-left font-semibold">
+                  {/* <th className="px-6 py-4 text-left font-semibold">
                     Assigned Officer
-                  </th>
+                  </th> */}
                   <th className="px-6 py-4 text-left font-semibold">
                     Attachments
                   </th>
@@ -306,12 +351,12 @@ const submitFeedback = async () => {
                         {appointment.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <div className="flex items-center text-slate-600">
                         <User className="w-4 h-4 mr-2" />
                         {appointment.assignedOfficer || "Not assigned"}
                       </div>
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">

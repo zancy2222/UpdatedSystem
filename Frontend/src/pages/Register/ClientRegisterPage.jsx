@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export default function ClientRegisterPage() {
   const navigate = (path) => {
@@ -159,10 +162,10 @@ export default function ClientRegisterPage() {
         // Store token and redirect
         localStorage.setItem("authToken", data.data.token);
         localStorage.setItem("clientData", JSON.stringify(data.data.client));
-        alert("Client registration successful");
+        toast.success("Client registration successful");
         navigate("/");
       } else {
-        setError(data.message || "Registration failed");
+        toast.error((data.message || "Registration failed"));
         if (data.errors) {
           console.error("Validation errors:", data.errors);
           // Display specific field errors if needed
@@ -521,23 +524,7 @@ export default function ClientRegisterPage() {
                   />
                 </div>
               </div>
-              <div className="mt-4">
-                <label
-                  htmlFor="address"
-                  className="block text-sm font-semibold text-slate-700 mb-1"
-                >
-                  Address *
-                </label>
-                <textarea
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  rows="2"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-                  required
-                ></textarea>
-              </div>
+             
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
                   <label

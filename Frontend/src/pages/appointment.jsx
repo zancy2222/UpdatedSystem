@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import ScheduleAdd from "../components/ScheduleAdd";
 import ScheduleEdit from "../components/ScheduleEdit";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Appointment({
   isModalOpen,
@@ -115,7 +117,7 @@ export default function Appointment({
 
   const handleFormSubmit = async () => {
     if (!selectedDate) {
-      alert("Please select a date");
+      toast.error("Please select a date");
       return;
     }
     try {
@@ -138,6 +140,7 @@ export default function Appointment({
       const data = await response.json();
 
       if (data.success) {
+        toast.success(`Succesfully Addded Schedule`);
         setAppointments((prev) => [
           ...prev,
           {
@@ -153,7 +156,7 @@ export default function Appointment({
         setIsModalOpen(false);
         resetForm();
       } else {
-        alert(data.message || "Error creating appointment");
+        toast.error((data.message || "Error creating appointment"));
       }
     } catch (error) {
       console.error("Error creating appointment:", error);
@@ -187,6 +190,7 @@ export default function Appointment({
       const data = await response.json();
 
       if (data.success) {
+        toast.success(`Succesfully Updated Schedule`);
         const updatedAppointments = appointments.map((app) =>
           app.id === appointmentToEdit.id
             ? {

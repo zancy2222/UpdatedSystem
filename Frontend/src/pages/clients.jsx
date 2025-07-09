@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, ChevronDown, ChevronUp, X, Check, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, ChevronDown, ChevronUp, X, Check, RefreshCw, Info } from 'lucide-react';
 
 // ClientList Component
 const ClientList = ({
@@ -119,7 +119,7 @@ const ClientList = ({
                       onClick={() => handleEdit(client)}
                       className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
                     >
-                      <Edit size={16} />
+                      <Info size={16} />
                     </button>
                     {/* <button
                       onClick={() => handleDelete(client.id)}
@@ -178,182 +178,83 @@ const ClientModal = ({
             </button>
           </div>
 
-          {/* Modal Body */}
-          <div className="flex-1 overflow-y-auto p-6">
-            <form onSubmit={handleFormSubmit}>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Username */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Username *</label>
-                    <input
-                      type="text"
-                      name="username"
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                      required
-                      placeholder="Enter username"
-                    />
-                  </div>
+         {/* Modal Body */}
+<div className="flex-1 overflow-y-auto p-6">
+  <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      {/* Username */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Username</label>
+        <p className="text-gray-900">{formData.username || '—'}</p>
+      </div>
 
-                  {/* Password - Only show for new clients */}
-                  {!isEditMode && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
-                      <input
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                        required={!isEditMode}
-                        placeholder="Enter password"
-                      />
-                    </div>
-                  )}
+      {/* First Name */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">First Name</label>
+        <p className="text-gray-900">{formData.firstname || '—'}</p>
+      </div>
 
-                  {/* First Name */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">First Name *</label>
-                    <input
-                      type="text"
-                      name="firstname"
-                      value={formData.firstname}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                      required
-                      placeholder="Enter first name"
-                    />
-                  </div>
+      {/* Middle Name */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Middle Name</label>
+        <p className="text-gray-900">{formData.middlename || '—'}</p>
+      </div>
 
-                  {/* Middle Name */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Middle Name</label>
-                    <input
-                      type="text"
-                      name="middlename"
-                      value={formData.middlename}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                      placeholder="Enter middle name"
-                    />
-                  </div>
+      {/* Last Name */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Last Name</label>
+        <p className="text-gray-900">{formData.lastname || '—'}</p>
+      </div>
 
-                  {/* Last Name */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Last Name *</label>
-                    <input
-                      type="text"
-                      name="lastname"
-                      value={formData.lastname}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                      required
-                      placeholder="Enter last name"
-                    />
-                  </div>
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+        <p className="text-gray-900">{formData.email || '—'}</p>
+      </div>
 
-                  {/* Email */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                      required
-                      placeholder="Enter email address"
-                    />
-                  </div>
+      {/* Contact Number */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Contact Number</label>
+        <p className="text-gray-900">{formData.contact_number || '—'}</p>
+      </div>
 
-                  {/* Contact Number */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Number *</label>
-                    <input
-                      type="tel"
-                      name="contact_number"
-                      value={formData.contact_number}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                      required
-                      placeholder="Enter contact number"
-                    />
-                  </div>
+      {/* Address */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Province</label>
+        <p className="text-gray-900">{formData.province || '—'}</p>
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">City</label>
+        <p className="text-gray-900">{formData.city || '—'}</p>
+      </div>
 
-                  {/* Address */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Address *</label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                      required
-                      placeholder="Enter address"
-                    />
-                  </div>
+      {/* Civil Status */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Civil Status</label>
+        <p className="text-gray-900">{formData.civil_status || '—'}</p>
+      </div>
 
-                  {/* Civil Status */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Civil Status</label>
-                    <select
-                      name="civil_status"
-                      value={formData.civil_status}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                    >
-                      <option value="Single">Single</option>
-                      <option value="Married">Married</option>
-                    </select>
-                  </div>
+      {/* Birthplace */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Birthplace</label>
+        <p className="text-gray-900">{formData.birthplace || '—'}</p>
+      </div>
 
-                  {/* Birthplace */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Birthplace *</label>
-                    <input
-                      type="text"
-                      name="birthplace"
-                      value={formData.birthplace}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                      required
-                      placeholder="Enter birthplace"
-                    />
-                  </div>
+      {/* Birthday */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Birthday</label>
+        <p className="text-gray-900">{formData.birthday || '—'}</p>
+      </div>
 
-                  {/* Birthday */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Birthday *</label>
-                    <input
-                      type="date"
-                      name="birthday"
-                      value={formData.birthday}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                      required
-                    />
-                  </div>
-
-                  {/* Sex */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Sex</label>
-                    <select
-                      name="sex"
-                      value={formData.sex}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
-                    >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
+      {/* Sex */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Sex</label>
+        <p className="text-gray-900">{formData.sex || '—'}</p>
+      </div>
+    </div>
+  </div>
+</div>
 
           {/* Modal Footer */}
           <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-4">
@@ -364,13 +265,13 @@ const ClientModal = ({
             >
               Cancel
             </button>
-            <button
+            {/* <button
               type="button"
               onClick={handleFormSubmit}
               className="px-6 py-3 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors shadow-lg"
             >
               {isEditMode ? 'Update Client' : 'Add Client'}
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -493,6 +394,9 @@ export default function Clients() {
       email: client.email,
       contact_number: client.contact_number,
       address: client.address,
+      province: client.province,
+      city: client.city,
+      street: client.street,
       civil_status: client.civil_status || 'Single',
       birthplace: client.birthplace,
       birthday: client.birthday,

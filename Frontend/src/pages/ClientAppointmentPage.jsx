@@ -15,6 +15,8 @@ import { useNavigate } from "react-router-dom";
 import ClientProfile from "../components/ClientProfile";
 import ClientAppointment from "../components/ClientAppointment";
 import ClientAppointmentHistoryDemo from "../components/ClientAppointmentHistoryDemo";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function ClientAppointmentSystem() {
   const [activeTab, setActiveTab] = useState("appointment");
@@ -385,13 +387,13 @@ useEffect(() => {
         setIsModalOpen(false);
         setShowConfirmation(false);
 
-        alert(
-          `Appointment created successfully with ${officerName}! ${
-            attachments.length > 0
-              ? `${attachments.length} file(s) uploaded.`
-              : ""
-          }`
-        );
+    toast.success(
+      `Appointment created successfully with ${officerName}! ${
+        attachments.length > 0
+          ? `${attachments.length} file(s) uploaded.`
+          : ""
+      }`
+    );
         window.location.reload();
       } else {
         alert(data.message || "Failed to create appointment");
@@ -592,16 +594,7 @@ useEffect(() => {
 
     }
 
-    // Get the selected officer's name for display
-    const getSelectedOfficerName = () => {
-      if (selectedOfficerId && selectedDate) {
-        const officer = officerSchedules[selectedOfficer].officers.find(
-          (o) => o.id.toString() === selectedOfficerId.toString()
-        );
-        return officer?.name || "Officer";
-      }
-      return null;
-    };
+ 
 
     return (
       <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
@@ -683,19 +676,7 @@ useEffect(() => {
                 </span>
               </div>
             </div>
-
-            {/* NEW: Display assigned officer */}
-            {getSelectedOfficerName() && (
-              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                <div className="flex items-center text-purple-800">
-                  <User className="w-4 h-4 mr-2" />
-                  <span className="font-medium">Assigned Officer: </span>
-                  <span className="ml-1 font-bold">
-                    {getSelectedOfficerName()}
-                  </span>
-                </div>
-              </div>
-            )}
+ 
           </div>
         )}
       </div>
